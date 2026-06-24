@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, timedelta
 
 
 @dataclass
@@ -14,7 +14,14 @@ class Task:
 
     def mark_complete(self):
         """Mark this task as done and return the next occurrence if recurring."""
-        pass
+        self.completed = True
+        if self.frequency == "daily":
+            next_due = (self.due_date or date.today()) + timedelta(days=1)
+            return Task(self.description, self.time, self.frequency, due_date=next_due, pet_name=self.pet_name)
+        if self.frequency == "weekly":
+            next_due = (self.due_date or date.today()) + timedelta(weeks=1)
+            return Task(self.description, self.time, self.frequency, due_date=next_due, pet_name=self.pet_name)
+        return None
 
 
 @dataclass
@@ -30,11 +37,12 @@ class Pet:
 
     def add_task(self, task: Task) -> None:
         """Add a task to this pet's list."""
-        pass
+        task.pet_name = self.name
+        self.tasks.append(task)
 
     def get_tasks(self) -> list:
         """Return all tasks for this pet."""
-        pass
+        return self.tasks
 
 
 class Owner:
@@ -46,11 +54,14 @@ class Owner:
 
     def add_pet(self, pet: Pet) -> None:
         """Register a pet with this owner."""
-        pass
+        self.pets.append(pet)
 
     def get_all_tasks(self) -> list:
         """Collect and return every task across all pets."""
-        pass
+        tasks = []
+        for pet in self.pets:
+            tasks.extend(pet.get_tasks())
+        return tasks
 
 
 class Scheduler:
@@ -61,20 +72,44 @@ class Scheduler:
 
     def sort_by_time(self, tasks=None) -> list:
         """Return tasks sorted chronologically by time."""
-        pass
+        if tasks is None:
+            tasks = self.owner.get_all_tasks()
+        return sorted(tasks, key=lambda t: t.time)
 
     def filter_tasks(self, pet_name=None, completed=None) -> list:
         """Filter tasks by pet name and/or completion status."""
-        pass
+        tasks = self.owner.get_all_tasks()
+        if pet_name is not None:
+            tasks = [t for t in tasks if t.pet_name == pet_name]
+        if completed is not None:
+            tasks = [t for t in tasks if t.completed == completed]
+        return tasks
 
     def detect_conflicts(self) -> list:
         """Return warning strings for any tasks sharing the same time slot."""
-        pass
+        seen = {}
+        conflicts = []
+        for task in self.owner.get_all_tasks():
+            if task.time in seen:
+                conflicts.append(
+                    f"Conflict at {task.time}: '{seen[task.time]}' and '{task.description}'"
+                )
+            else:
+                seen[task.time] = task.description
+        return conflicts
 
     def mark_task_complete(self, task: Task, pet: Pet):
         """Mark a task complete and auto-schedule the next occurrence if recurring."""
-        pass
+        next_task = task.mark_complete()
+        if next_task is not None:
+            pet.add_task(next_task)
+        return next_task
 
     def get_daily_schedule(self) -> list:
         """Return today's pending tasks sorted by time."""
-        pass
+        today = date.today()
+        tasks = [
+            t for t in self.owner.get_all_tasks()
+            if not t.completed and (t.due_date is None or t.due_date == today)
+        ]
+        return self.sort_by_time(tasks)

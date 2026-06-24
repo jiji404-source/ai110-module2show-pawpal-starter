@@ -5,12 +5,74 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+The UML diagram shows four classes connected by arrows.
+
+Owner sits at the top and has a one-to-many relationship with Pet, meaning one owner can have multiple pets. Pet has a one-to-many relationship with Task, meaning each pet can have multiple care tasks assigned to it. Scheduler connects to Owner and uses it as a way to reach all pets and their tasks without storing any data itself. The arrows show that Owner "owns" Pets, Pet "has" Tasks, and Scheduler "manages" the Owner.
+
+
+classDiagram
+    class Task {
+        +String description
+        +String time
+        +String frequency
+        +Boolean completed
+        +Date due_date
+        +String pet_name
+        +mark_complete() Task
+    }
+
+    class Pet {
+        +String name
+        +String breed
+        +Int age
+        +String allergies
+        +String medications
+        +List tasks
+        +add_task(task) None
+        +get_tasks() List
+    }
+
+    class Owner {
+        +String name
+        +List pets
+        +add_pet(pet) None
+        +get_all_tasks() List
+    }
+
+    class Scheduler {
+        +Owner owner
+        +sort_by_time(tasks) List
+        +filter_tasks(pet_name, completed) List
+        +detect_conflicts() List
+        +mark_task_complete(task, pet) Task
+        +get_daily_schedule() List
+    }
+
+    Owner "1" --> "0..*" Pet : owns
+    Pet "1" --> "0..*" Task : has
+    Scheduler --> Owner : manages
+
 - What classes did you include, and what responsibilities did you assign to each?
+
+- Task: Represents one care activity. It holds a description (like "Morning walk"), a scheduled time, how often it repeats (once/daily/weekly), and whether it's been completed.
+
+- Pet: Stores a pet's details (name, breed, age, allergies, and medications). It also holds a list of Task objects for everything that pet needs done.
+
+- Owner: Holds the owner's name and a list of their pets. It's the top-level container that connects everything.
+
+- Scheduler: The "brain" of the system. It takes the Owner's pets and tasks and organizes them: sorting by time, detecting conflicts, and returning today's schedule.
+
 
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+I originally listed walk, feed, groom, and play as separate things, but I realized those are just values for the description field inside one Task class, not separate classes themselves. I also added allergies and medications as Pet attributes since a real pet care app needs that info.
+
+I kept Owner and Scheduler as regular classes instead of dataclasses because they manage mutable state (lists that grow over time) and have more complex behavior than just storing data. Task and Pet became dataclasses since they mainly hold information.
+
+
+
 
 ---
 
