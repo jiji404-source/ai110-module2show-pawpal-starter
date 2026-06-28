@@ -176,4 +176,8 @@ PawPal+ is a Streamlit app with a sidebar and three tabs:
 --- Marking 'Evening walk' complete ---
   Done! Biscuit now has 4 tasks (tomorrow's walk auto-scheduled).
 ```
-**Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->
+**Screenshot or video** *(optional)*: 
+
+![UML Final Diagram](diagrams/UML_final_diagram.png)
+![PawPal+ App Screenshot](PawPal%20Screenshot.png)
+
