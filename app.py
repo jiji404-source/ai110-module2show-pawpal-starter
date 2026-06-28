@@ -2,6 +2,48 @@ import streamlit as st
 from datetime import date
 from pawpal_system import Task, Pet, Owner, Scheduler
 
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap');
+
+html, body, [class*="css"] {
+    font-family: 'Manrope', sans-serif;
+}
+
+h1, h2, h3 {
+    font-weight: 800;
+    color: #0B0A0A;
+}
+
+/* Rounded primary buttons */
+.stButton > button {
+    border-radius: 24px;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: #F2E7DF;
+    border-right: 1px solid #e0d6cb;
+}
+
+/* Tab styling */
+[data-testid="stTabs"] button {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 600;
+}
+
+/* Metric cards */
+[data-testid="stMetric"] {
+    background-color: #FDFDFD;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #e0d6cb;
+}
+</style>
+""", unsafe_allow_html=True)
+
 if "owner" not in st.session_state:
     st.session_state.owner = Owner("My Owner")
 
@@ -85,18 +127,31 @@ with tab2:
     if conflicts:
         for c in conflicts:
             st.warning(f"⚠️ {c}")
+    else:
+        st.success("No scheduling conflicts detected.")
 
     schedule = scheduler.get_daily_schedule()
     if not schedule:
         st.info("No tasks scheduled for today. Add some in the 'Add Task' tab.")
     else:
+        total     = len(scheduler.filter_tasks())
+        pending   = len(scheduler.filter_tasks(completed=False))
+        done      = len(scheduler.filter_tasks(completed=True))
+
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Total Tasks", total)
+        m2.metric("Pending",     pending)
+        m3.metric("Completed",   done)
+
+        st.divider()
+        st.caption(f"{len(schedule)} task(s) today — sorted earliest to latest")
         st.table([
             {
                 "Time":      t.time,
                 "Pet":       t.pet_name,
                 "Task":      t.description,
                 "Frequency": t.frequency,
-                "Status":    "Done ✓" if t.completed else "Pending",
+                "Status":    "✅ Done" if t.completed else "🕐 Pending",
             }
             for t in schedule
         ])
@@ -121,15 +176,22 @@ with tab3:
     if not filtered:
         st.info("No tasks match this filter.")
     else:
+        st.caption(f"{len(filtered)} task(s) found — sorted by time")
         for i, task in enumerate(filtered):
-            col_btn, col_info = st.columns([1, 8])
-            with col_info:
-                st.write(f"**{task.time}** | {task.pet_name} | {task.description} | *{task.frequency}*")
+            col_btn, col_time, col_pet, col_desc, col_freq = st.columns([1, 1, 1, 3, 1])
+            with col_time:
+                st.write(f"🕐 **{task.time}**")
+            with col_pet:
+                st.write(f"🐾 {task.pet_name}")
+            with col_desc:
+                st.write(task.description)
+            with col_freq:
+                st.caption(task.frequency)
             with col_btn:
                 if not task.completed:
-                    if st.button("Complete", key=f"complete_{i}"):
+                    if st.button("✓ Done", key=f"complete_{i}"):
                         pet = next(p for p in owner.pets if p.name == task.pet_name)
                         scheduler.mark_task_complete(task, pet)
                         st.rerun()
                 else:
-                    st.success("Done")
+                    st.success("✅ Done")

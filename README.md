@@ -113,6 +113,14 @@ tests/test_pawpal.py .....                                                      
 
 **Confidence Level: 3/5** - All 5 tests pass and the three core behaviors (sorting, recurrence, conflict detection) are verified. Score is not higher because the suite is small and edge cases like double-completing a task or unknown frequencies are not yet tested.
 
+## ✨ Features
+
+- **Chronological sorting** — Tasks are always displayed earliest to latest using parsed HH:MM time values, so the schedule is never out of order regardless of the order tasks were added.
+- **Conflict warnings** — The scheduler scans all tasks and flags any time slot where two or more tasks overlap, surfacing a warning before the owner acts on a broken schedule.
+- **Daily & weekly recurrence** — Marking a recurring task complete automatically creates the next occurrence with the correct due date, so the owner never has to re-enter it.
+- **Pet & status filtering** — Tasks can be filtered by pet name, completion status, or both in a single pass, making it easy to focus on one pet or see what's still pending.
+- **Today's schedule view** — Pulls only tasks due today (or with no due date) that are still pending, sorted by time, giving the owner a clean daily action list.
+
 ## 📐 Smarter Scheduling
 
 | Feature | Method(s) | Notes |
@@ -124,12 +132,48 @@ tests/test_pawpal.py .....                                                      
 
 ## 📸 Demo Walkthrough
 
-Describe your app in numbered steps so a reader can follow along without watching a video:
+### UI Features
+PawPal+ is a Streamlit app with a sidebar and three tabs:
+- **Sidebar** — Enter your name and add pets (name, species, breed, age, allergies, medications)
+- **Add Task tab** — Pick a pet, describe the task, set a time, and choose once / daily / weekly
+- **Today's Schedule tab** — See task counts, conflict warnings, and a sorted schedule table for today
+- **Manage Tasks tab** — Filter tasks by pet or status, and mark individual tasks complete
 
-1. <!-- Describe this step -->
-2. <!-- Describe this step -->
-3. <!-- Describe this step -->
-4. <!-- Describe this step -->
-5. <!-- Add more steps as needed -->
+### Example Workflow
+1. Open the app and enter your name in the sidebar
+2. Add a pet — e.g. "Biscuit" (dog) and "Mochi" (cat)
+3. Schedule tasks for each pet with different times and frequencies
+4. Navigate to **Today's Schedule** — tasks appear sorted earliest to latest
+5. If two tasks share a time slot, a yellow `⚠️ Conflict` warning appears above the table
+6. Go to **Manage Tasks**, filter by pet, and click **✓ Done** on a daily task — it auto-schedules for tomorrow
 
+### Key Scheduler Behaviors
+- Tasks added in any order are always displayed chronologically (`Scheduler.sort_by_time()`)
+- Scheduling two pets at the same time triggers a conflict warning (`Scheduler.detect_conflicts()`)
+- Completing a daily or weekly task creates the next occurrence automatically (`Scheduler.mark_task_complete()`)
+- Filtering by pet or status uses a single pass over all tasks (`Scheduler.filter_tasks()`)
+
+### Sample CLI Output
+```
+=============================================
+  PawPal+ | Today's Schedule for Jessie
+=============================================
+  [    ]  08:00  |  Biscuit   |  Morning feeding
+  [    ]  08:00  |  Mochi     |  Morning feeding
+  [    ]  09:00  |  Mochi     |  Give allergy pill
+  [    ]  10:00  |  Biscuit   |  Vet appointment
+  [    ]  15:00  |  Mochi     |  Playtime
+  [    ]  18:00  |  Biscuit   |  Evening walk
+
+--- Conflict Check ---
+  WARNING: Conflict at 08:00: 'Morning feeding', 'Morning feeding'
+
+--- Biscuit's Tasks Only ---
+  18:00  |  Evening walk  (daily)
+  08:00  |  Morning feeding  (daily)
+  10:00  |  Vet appointment  (once)
+
+--- Marking 'Evening walk' complete ---
+  Done! Biscuit now has 4 tasks (tomorrow's walk auto-scheduled).
+```
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or link to a demo video here -->

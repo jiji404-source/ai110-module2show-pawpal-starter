@@ -102,12 +102,17 @@ This tradeoff is reasonable for this scenario because pet care tasks don't have 
 **a. How you used AI**
 
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
+I used Claude Code as my AI coding assistant across three separate chat sessions, one per phase to keep the context focused. In the first session I used it to brainstorm the UML diagram and generate the class skeletons. In the second session I used it to flesh out the full implementation and write the demo script. In the third session I used it to identify bugs in my algorithmic methods, polish the Streamlit UI, and write the test suite.
+
 - What kinds of prompts or questions were most helpful?
+The most helpful prompts were ones where I attached the actual file — asking "what's wrong with this method" with the code visible got much more specific answers than asking in the abstract. Asking "explain this like I'm 12" when I didn't understand a concept (like `st.session_state` or edge cases in recurring tasks) also worked really well. Describing the real-world problem first ("a pet owner needs to track walks, feedings, medications") before asking for code helped the AI stay grounded in what actually mattered.
 
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+When working on `Task.mark_complete()`, AI suggested rewriting it with a dictionary lookup (`deltas = {"daily": timedelta(days=1), "weekly": timedelta(weeks=1)}`). I rejected that version because it traded readability for extensibility — a reader unfamiliar with that pattern would have to stop and decode it. I kept the two `if` blocks but extracted the repeated `(self.due_date or date.today())` into a `base` variable, which solved the readability problem without adding complexity. I verified the change by running `main.py` and confirming the recurring task output was unchanged.
 
 ---
 
@@ -116,12 +121,17 @@ This tradeoff is reasonable for this scenario because pet care tasks don't have 
 **a. What you tested**
 
 - What behaviors did you test?
+I tested five behaviors: sorting correctness (tasks added out of order come back chronologically), daily recurrence (completing a daily task creates a new one due tomorrow), conflict detection (two tasks at the same time both appear in the warning), task completion (calling `mark_complete()` flips the `completed` flag to `True`), and task addition (adding a task to a `Pet` increases its task count by one).
+
 - Why were these tests important?
+These were important because they cover all four algorithmic features the project required; sorting, filtering, recurrence, and conflict detection; and confirm the core data flow between `Task`, `Pet`, and `Scheduler`.
 
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
+
+3 out of 5. All five tests pass and the three core algorithms are verified. The score isn't higher because the test suite is small and doesn't cover edge cases like completing a task that's already been completed, adding a task with an invalid time format, weekly recurrence creating a task exactly 7 days out, or what happens when an owner has no pets.
 
 ---
 
@@ -131,10 +141,16 @@ This tradeoff is reasonable for this scenario because pet care tasks don't have 
 
 - What part of this project are you most satisfied with?
 
+The CLI-first workflow worked well. Building and verifying the logic in `main.py` before touching the Streamlit UI meant I never had to debug UI and backend problems at the same time. The class design also came together cleanly, because `Owner`, `Pet`, `Task`, and `Scheduler` each have one clear job, connecting the backend to the Streamlit UI in Phase 3 was straightforward. I just called the methods I'd already written and tested.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+I would add a `duration` field to `Task` so conflict detection could catch overlapping tasks, not just exact time matches. I would also add data persistence so pets and tasks don't reset every time the app restarts, right now all data lives only in `st.session_state` and is lost when the browser closes.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+Using separate chat sessions for each phase kept the AI focused and the suggestions relevant. When everything is in one long conversation, the AI starts referencing earlier context that no longer applies. But more importantly, AI can generate code quickly, you still have to understand the design decisions yourself. When the AI suggested using dataclasses for `Task` and `Pet` but regular classes for `Owner` and `Scheduler`, I had to actually understand why, not just accept it. Being the "lead architect" means knowing enough to ask good questions and evaluate the answers.
