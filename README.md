@@ -71,10 +71,25 @@ Paste a sample of your app's CLI or Streamlit output here so a reader can see wh
 ```
 
 ## 🧪 Testing PawPal+
+Sorting Correctness — test_sort_by_time_returns_chronological_order
+Adds three tasks in reverse time order (18:00, 12:00, 08:00) and verifies that Scheduler.sort_by_time() returns them earliest-first.
+
+Recurrence Logic — test_daily_recurrence_creates_next_day_task
+Marks a daily task complete and confirms that a new task is automatically created with a due date of exactly tomorrow.
+
+Conflict Detection — test_detect_conflicts_flags_duplicate_times
+Schedules two tasks at the same time slot and verifies that Scheduler.detect_conflicts() returns at least one warning.
+
+Task Completion — test_mark_complete_changes_status
+Calls mark_complete() on a one-time task and confirms its completed flag flips to True.
+
+Task Addition — test_add_task_increases_pet_task_count
+Adds a task to a Pet and confirms the pet's task list grows from 0 to 1.
+
 
 ```bash
 # Run the full test suite:
-pytest
+python -m pytest
 
 # Run with coverage:
 pytest --cov
@@ -83,8 +98,20 @@ pytest --cov
 Sample test output:
 
 ```
-# Paste your pytest output here
+====================================================================== test session starts ======================================================================
+platform darwin -- Python 3.13.7, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/jessiegadson/Documents/Baruch_College_Classes/CodePath/ai110-module2show-pawpal-starter
+plugins: anyio-4.14.0
+collected 5 items                                                                                                                                               
+
+tests/test_pawpal.py .....                                                                                                                                [100%]
+
+======================================================================= 5 passed in 0.02s =======================================================================
+
+
 ```
+
+**Confidence Level: 3/5** - All 5 tests pass and the three core behaviors (sorting, recurrence, conflict detection) are verified. Score is not higher because the suite is small and edge cases like double-completing a task or unknown frequencies are not yet tested.
 
 ## 📐 Smarter Scheduling
 
