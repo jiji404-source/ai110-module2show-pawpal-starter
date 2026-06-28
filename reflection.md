@@ -81,12 +81,19 @@ I kept Owner and Scheduler as regular classes instead of dataclasses because the
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+The scheduler considers three constraints: time (tasks are sorted chronologically by their HH:MM value), due date (only tasks due today appear in the daily schedule), and completion status (completed tasks are filtered out of the active view).
+
 - How did you decide which constraints mattered most?
+Time was the most important constraint because a pet care routine is inherently time-driven, a feeding at 08:00 and a medication at 09:00 need to happen in order. Due date mattered because showing all tasks ever added would clutter the schedule. Completion status mattered so owners aren't reminded to do things they've already done. Priority and duration were not considered because the app is designed for simple daily routines, not complex scheduling problems.
+
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+The scheduler only checks for exact time matches when detecting conflicts, if two tasks are both scheduled at "08:00", it flags a warning. But it doesn't account for tasks that overlap in duration. For example, a 30-minute walk starting at 07:45 and a feeding at 08:00 would never be flagged, even if they can't both happen at once.
+
 - Why is that tradeoff reasonable for this scenario?
+This tradeoff is reasonable for this scenario because pet care tasks don't have strict durations, a "feeding" could take 2 minutes or 10 minutes depending on the day. Requiring duration data would make the system more complex to use without meaningfully improving it for most pet owners. Exact time matching covers the most common real conflict: two things literally scheduled at the same moment.
 
 ---
 

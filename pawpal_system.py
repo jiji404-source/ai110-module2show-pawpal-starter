@@ -1,5 +1,6 @@
+from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import date, timedelta
+from datetime import date, time as dt_time, timedelta
 
 
 @dataclass
@@ -13,14 +14,15 @@ class Task:
     pet_name: str = ""
 
     def mark_complete(self):
-        """Mark this task as done and return the next occurrence if recurring."""
+        """Mark this task done and return a new Task for the next occurrence if daily or weekly, otherwise None."""
         self.completed = True
+        base = self.due_date or date.today()
         if self.frequency == "daily":
-            next_due = (self.due_date or date.today()) + timedelta(days=1)
-            return Task(self.description, self.time, self.frequency, due_date=next_due, pet_name=self.pet_name)
+            return Task(self.description, self.time, self.frequency,
+                        due_date=base + timedelta(days=1), pet_name=self.pet_name)
         if self.frequency == "weekly":
-            next_due = (self.due_date or date.today()) + timedelta(weeks=1)
-            return Task(self.description, self.time, self.frequency, due_date=next_due, pet_name=self.pet_name)
+            return Task(self.description, self.time, self.frequency,
+                        due_date=base + timedelta(weeks=1), pet_name=self.pet_name)
         return None
 
 
@@ -71,32 +73,29 @@ class Scheduler:
         self.owner = owner
 
     def sort_by_time(self, tasks=None) -> list:
-        """Return tasks sorted chronologically by time."""
+        """Return tasks sorted chronologically using parsed HH:MM time values, not string order."""
         if tasks is None:
             tasks = self.owner.get_all_tasks()
-        return sorted(tasks, key=lambda t: t.time)
+        return sorted(tasks, key=lambda t: dt_time.fromisoformat(t.time))
 
     def filter_tasks(self, pet_name=None, completed=None) -> list:
-        """Filter tasks by pet name and/or completion status."""
-        tasks = self.owner.get_all_tasks()
-        if pet_name is not None:
-            tasks = [t for t in tasks if t.pet_name == pet_name]
-        if completed is not None:
-            tasks = [t for t in tasks if t.completed == completed]
-        return tasks
+        """Return tasks matching the given pet name and/or completion status in a single pass over all tasks."""
+        return [
+            t for t in self.owner.get_all_tasks()
+            if (pet_name is None or t.pet_name == pet_name)
+            and (completed is None or t.completed == completed)
+        ]
 
     def detect_conflicts(self) -> list:
-        """Return warning strings for any tasks sharing the same time slot."""
-        seen = {}
-        conflicts = []
+        """Return warning strings for every time slot where two or more tasks are scheduled simultaneously."""
+        slots = defaultdict(list)
         for task in self.owner.get_all_tasks():
-            if task.time in seen:
-                conflicts.append(
-                    f"Conflict at {task.time}: '{seen[task.time]}' and '{task.description}'"
-                )
-            else:
-                seen[task.time] = task.description
-        return conflicts
+            slots[task.time].append(task.description)
+        return [
+            f"Conflict at {time}: " + ", ".join(f"'{d}'" for d in descs)
+            for time, descs in slots.items()
+            if len(descs) > 1
+        ]
 
     def mark_task_complete(self, task: Task, pet: Pet):
         """Mark a task complete and auto-schedule the next occurrence if recurring."""
